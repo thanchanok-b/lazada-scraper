@@ -301,14 +301,8 @@ This file contains product listing data scraped from Lazada shop pages.
 | `seller_id` | Seller ID |
 | `shop_key` | Shop key used in Lazada URL |
 | `location` | Product shipping location |
-| `source_platform` | Source platform, usually `Lazada` |
 | `discount_price` | Current selling price after discount |
 | `original_price` | Original price before discount |
-| `discount_amount` | Discount amount in THB |
-| `discount_percent` | Discount percentage |
-| `is_flash_sale` | Whether product is detected as Flash Sale |
-| `coupon_promotion` | Coupon or promotion text |
-| `cheapest_sku` | Cheapest SKU value from Lazada |
 | `sold_count` | Parsed number of sold items |
 | `sold_count_raw` | Original sold count text from Lazada |
 | `rating_score` | Average product rating |
@@ -317,7 +311,7 @@ This file contains product listing data scraped from Lazada shop pages.
 | `is_sponsored` | Whether product is sponsored |
 | `product_url` | Product URL |
 | `image_url` | Product image URL |
-| `crawl_page` | Page number where product was found |
+| `source_platform` | Source platform, usually `Lazada` |
 | `collected_at` | Timestamp of data collection |
 
 ---
@@ -332,9 +326,6 @@ This file contains detailed information scraped from product detail pages.
 | `product_name` | Product name |
 | `shop_name` | Shop name |
 | `product_url` | Product URL |
-| `brand` | Brand extracted from product specifications |
-| `sku` | SKU extracted from product specifications |
-| `license_number` | Product license or FDA registration number if available |
 | `qualification_info` | Raw qualification information in JSON format |
 | `all_specs` | Raw product specification information in JSON format |
 | `description` | Product description text |
@@ -361,7 +352,6 @@ This file contains customer reviews scraped from Lazada product review API.
 | `comment_text` | Customer review text |
 | `source_platform` | Source platform, usually `Lazada` |
 | `product_url` | Product URL |
-| `crawl_page` | Review page number |
 | `collected_at` | Timestamp of data collection |
 
 ---
@@ -379,8 +369,6 @@ This file contains product listing data scraped from Lazada search results.
 | `brand_name` | Brand name |
 | `discount_price` | Current selling price after discount |
 | `original_price` | Original price before discount |
-| `discount_amount` | Discount amount in THB |
-| `discount_percent` | Discount percentage |
 | `sold_count` | Parsed number of sold items |
 | `sold_count_raw` | Original sold count text from Lazada |
 | `rating_score` | Average product rating |
@@ -388,41 +376,12 @@ This file contains product listing data scraped from Lazada search results.
 | `shop_name` | Shop name |
 | `seller_id` | Seller ID |
 | `is_mall` | Whether product is detected as LazMall |
-| `is_flash_sale` | Whether product is detected as Flash Sale |
 | `location` | Product shipping location |
 | `is_sponsored` | Whether product is sponsored |
 | `product_url` | Product URL |
 | `image_url` | Product image URL |
 | `source_platform` | Source platform, usually `Lazada` |
-| `crawl_page` | Search result page number |
 | `collected_at` | Timestamp of data collection |
-
----
-
-## 💰 Price Column Explanation
-
-| Column | Meaning |
-| :--- | :--- |
-| `discount_price` | Current selling price after discount |
-| `original_price` | Original price before discount |
-| `discount_amount` | Amount discounted from the original price |
-| `discount_percent` | Discount percentage |
-
-Formula:
-
-```python
-discount_amount = original_price - discount_price
-discount_percent = (discount_amount / original_price) * 100
-```
-
-Example:
-
-```text
-original_price = 3160
-discount_price = 1499
-discount_amount = 1661
-discount_percent = 52.56
-```
 
 ---
 
