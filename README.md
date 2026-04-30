@@ -249,7 +249,6 @@ lazada-scraper/
 │   ├── lazada_details_YYYYMMDD_HHMMSS.xlsx
 │   ├── lazada_reviews_YYYYMMDD_HHMMSS.xlsx
 │   ├── lazada_search_YYYYMMDD_HHMMSS.xlsx
-│   └── failed_logs_YYYYMMDD_HHMMSS.xlsx
 │
 └── my_session/              # ignored by git
     └── browser session files
@@ -276,11 +275,6 @@ lazada-scraper/
 | `lazada_details_*.xlsx` | Product detail data scraped from product pages |
 | `lazada_reviews_*.xlsx` | Customer reviews scraped from Lazada review API |
 | `lazada_search_*.xlsx` | Product listings scraped from Lazada search keywords |
-| `failed_shops_*.xlsx` | Failed shop scraping logs |
-| `failed_details_*.xlsx` | Failed product detail scraping logs |
-| `failed_reviews_*.xlsx` | Failed review scraping logs |
-| `failed_keywords_*.xlsx` | Failed keyword scraping logs |
-| `debug_empty_detail_*.html` | Debug HTML for product pages with empty detail data |
 
 ---
 
