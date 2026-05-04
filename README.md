@@ -1,30 +1,49 @@
 # 🛍️ Lazada Multi-Scraper (Playwright)
 
-> **Last Updated:** 2026-04-30
+> **Version:** 2.0  
+> **Last Updated:** 2026-05-04  
+> **Platform:** Lazada Thailand  
+> **Runtime:** Jupyter Notebook / VS Code Notebook  
+> **Browser Engine:** Playwright Persistent Browser Context
 
-A Python-based tool for scraping product listings, product details, customer reviews, and keyword search results from **Lazada Thailand** using **Playwright**.
+A Python-based scraper for collecting Lazada Thailand data using **Playwright**.  
+This project supports product listing scraping, product detail scraping, review scraping, and keyword search scraping.
 
-This project is designed for market research, product monitoring, competitor analysis, customer review analytics, and e-commerce data collection workflows.
-
-Unlike CDP-based scrapers, this project uses **Playwright Persistent Browser Context** to store browser sessions, cookies, and login state in a local session folder.
+Version 2 improves the project structure, checkpoint system, logging system, and resume workflow to reduce data loss and avoid Excel checkpoint freeze issues.
 
 ---
 
 ## 🚀 Main Features
 
-This repository consists of four main scraping workflows:
+This project includes four scraping workflows:
 
 1. **Product by Shop Scraper**  
-   Extracts product listings from Lazada shop pages.
+   Scrapes product listings from Lazada shop pages.
 
 2. **Product Detail Scraper**  
-   Extracts product specifications, qualification information, descriptions, and description images from product detail pages.
+   Scrapes product specifications, qualification information, product descriptions, and description images.
 
 3. **Review Scraper**  
-   Extracts customer reviews from Lazada product review API.
+   Scrapes customer reviews from Lazada product review API.
 
 4. **Search Keyword Scraper**  
-   Extracts product listings from Lazada search results based on keywords.
+   Scrapes product listings from Lazada search result pages by keyword.
+
+---
+
+## 🆕 What’s New in Version 2
+
+Version 2 includes the following improvements:
+
+| Area | Version 2 Improvement |
+| :--- | :--- |
+| Checkpoint files | Temp checkpoint files are saved as `.csv` instead of `.xlsx` to reduce freezing |
+| Logging | Logs are saved as `.log` and error records are saved as `.jsonl` |
+| Folder structure | Output, temp, log, and session folders are separated clearly |
+| Resume workflow | Existing temp files can be loaded to continue scraping |
+| Search Keyword | Supports page-range resume using `start_page_by_keyword` and `end_page_by_keyword` |
+| Row format | Product, detail, review, and search outputs use separate row builders |
+| `shop_key` logic | `shop_key` is used only for Product by Shop because it comes from shop URLs |
 
 ---
 
@@ -35,36 +54,48 @@ This repository consists of four main scraping workflows:
 - Python 3.8+
 - Jupyter Lab or VS Code with Jupyter extension
 - Playwright
-- Chromium browser installed by Playwright
+- Chromium installed by Playwright
 
 ---
 
-### 2. Install Python Libraries
+### 2. Install Required Libraries
 
-Install the required libraries using pip:
+You can install libraries directly:
 
 ```bash
 pip install playwright pandas nest-asyncio openpyxl
 playwright install chromium
 ```
 
+Or install from `requirements.txt`:
+
+```bash
+pip install -r requirements.txt
+playwright install chromium
+```
+
+Recommended `requirements.txt`:
+
+```txt
+pandas>=2.1.4
+openpyxl>=3.1.0
+playwright>=1.55.0
+nest-asyncio>=1.5.0
+```
+
 ---
 
 ## 🔐 Browser Session Setup
 
-This scraper uses a persistent browser session to store cookies and login status.
+This project uses **Playwright Persistent Browser Context** to keep browser session, cookies, and login status.
 
-The browser session is saved in:
+The session folder is:
 
 ```text
 my_session/
 ```
 
-This allows the scraper to reuse login sessions without logging in every time.
-
----
-
-### Create Lazada Session
+### Create or Refresh Lazada Session
 
 In the notebook, set:
 
@@ -76,14 +107,14 @@ Then run the session setup cell.
 
 A browser window will open. Login to Lazada manually if required. After login is complete, close the browser window.
 
-After the session is created, change back to:
+After creating the session, set it back to:
 
 ```python
 CREATE_SESSION = False
 ```
 
 > **Important:**  
-> Do not upload the `my_session/` folder to GitHub because it may contain cookies or login session data.
+> Do not upload `my_session/` to GitHub because it may contain cookies or login session data.
 
 ---
 
@@ -93,41 +124,119 @@ Main configuration variables:
 
 ```python
 USER_DATA_DIR = "./my_session"
+
 OUTPUT_DIR = "./collected_data"
+TEMP_DIR = "./collected_data/temp"
+
+LOG_DIR = "./log"
+PRODUCT_LOG_DIR = "./log/product"
+DETAIL_LOG_DIR = "./log/detail"
+REVIEW_LOG_DIR = "./log/review"
+SEARCH_LOG_DIR = "./log/search"
 
 REQUEST_DELAY_MIN = 2.0
 REQUEST_DELAY_MAX = 3.0
 
 CREATE_SESSION = False
+
+PRODUCT_CHECKPOINT_EVERY_PAGES = 10
+DETAIL_CHECKPOINT_EVERY_URLS = 10
+REVIEW_CHECKPOINT_EVERY_PAGES = 20
+SEARCH_CHECKPOINT_EVERY_PAGES = 50
+
+RESUME_FROM_BACKUP = True
 ```
 
 | Variable | Description |
 | :--- | :--- |
-| `USER_DATA_DIR` | Folder used to store browser session and cookies |
-| `OUTPUT_DIR` | Folder used to save exported Excel files and debug files |
+| `USER_DATA_DIR` | Browser session folder |
+| `OUTPUT_DIR` | Final output folder |
+| `TEMP_DIR` | Temp checkpoint folder |
+| `LOG_DIR` | Main log folder |
+| `PRODUCT_LOG_DIR` | Product by Shop log folder |
+| `DETAIL_LOG_DIR` | Product Detail log folder |
+| `REVIEW_LOG_DIR` | Review log folder |
+| `SEARCH_LOG_DIR` | Search Keyword log folder |
 | `REQUEST_DELAY_MIN` | Minimum random delay between requests |
 | `REQUEST_DELAY_MAX` | Maximum random delay between requests |
-| `CREATE_SESSION` | Set to `True` only when creating or refreshing Lazada login session |
+| `CREATE_SESSION` | Set to `True` only when creating or refreshing session |
+| `RESUME_FROM_BACKUP` | Load existing temp files and skip duplicated data |
+
+---
+
+## 🗂️ Recommended Project Structure
+
+```text
+lazada_scraper/
+│
+├── README.md
+├── requirements.txt
+├── .gitignore
+├── lazada_scraper_playwright.ipynb
+│
+├── collected_data/
+│   │
+│   ├── lazada_product_YYYYMMDD_HHMMSS.xlsx
+│   ├── lazada_detail_YYYYMMDD_HHMMSS.xlsx
+│   ├── lazada_review_YYYYMMDD_HHMMSS.xlsx
+│   └── lazada_search_YYYYMMDD_HHMMSS.xlsx
+│   │
+│   └── temp/
+│       ├── temp_lazada_products.csv
+│       ├── temp_lazada_details.csv
+│       ├── temp_lazada_reviews.csv
+│       └── temp_lazada_search.csv
+│
+├── log/
+│   │
+│   ├── product/
+│   │   ├── product_scraper.log
+│   │   └── product_error.jsonl
+│   │
+│   ├── detail/
+│   │   ├── product_detail_scraper.log
+│   │   ├── product_detail_error.jsonl
+│   │   └── debug_empty_detail_*.html
+│   │
+│   ├── review/
+│   │   ├── review_scraper.log
+│   │   └── review_error.jsonl
+│   │
+│   └── search/
+│       ├── search_keyword_scraper.log
+│       └── search_keyword_error.jsonl
+│
+└── my_session/
+```
 
 ---
 
 ## 🚀 Usage
 
-Since the scripts are provided as **Jupyter Notebooks (.ipynb)**, it is recommended to run them in **VS Code** or **Jupyter Lab**.
+The project is designed to run in **Jupyter Notebook** or **VS Code Notebook**.
 
 ---
 
 ### 1. 🏬 Product by Shop Scraper
 
 **Objective:**  
-Scrape all product listings from Lazada shop pages.
+Scrape product listings from Lazada shop pages.
 
-Edit the shop keys:
+`shop_key` comes from the Lazada shop URL.
+
+Example:
+
+```text
+https://www.lazada.co.th/shop/mizumi-bomi/  →  mizumi-bomi
+```
+
+You can input either shop keys or full shop URLs:
 
 ```python
 SHOP_URL_KEYS = [
     "mizumi-bomi",
     "ing-on-official",
+    "https://www.lazada.co.th/shop/mizumi-bomi/",
 ]
 ```
 
@@ -137,10 +246,23 @@ Run:
 df_products = await run_product_by_shop(SHOP_URL_KEYS)
 ```
 
-Output example:
+Final output:
 
 ```text
-collected_data/lazada_products_YYYYMMDD_HHMMSS.xlsx
+collected_data/lazada_product_YYYYMMDD_HHMMSS.xlsx
+```
+
+Temp checkpoint:
+
+```text
+collected_data/temp/temp_lazada_products.csv
+```
+
+Log files:
+
+```text
+log/product/product_scraper.log
+log/product/product_error.jsonl
 ```
 
 ---
@@ -148,14 +270,14 @@ collected_data/lazada_products_YYYYMMDD_HHMMSS.xlsx
 ### 2. 📦 Product Detail Scraper
 
 **Objective:**  
-Scrape product detail data from Lazada product pages.
+Scrape product specifications, qualification information, product description, and description images.
 
 Edit product detail URLs:
 
 ```python
 DETAIL_PRODUCT_URLS = [
     "https://www.lazada.co.th/products/pdp-i5010918982-s21176047921.html",
-    "https://www.lazada.co.th/products/pdp-i5430857467-s23060039894.html",
+    "https://www.lazada.co.th/products/pdp-i4599133168-s18943395331.html",
 ]
 ```
 
@@ -165,10 +287,24 @@ Run:
 df_details = await run_product_detail(DETAIL_PRODUCT_URLS)
 ```
 
-Output example:
+Final output:
 
 ```text
-collected_data/lazada_details_YYYYMMDD_HHMMSS.xlsx
+collected_data/lazada_detail_YYYYMMDD_HHMMSS.xlsx
+```
+
+Temp checkpoint:
+
+```text
+collected_data/temp/temp_lazada_details.csv
+```
+
+Log files:
+
+```text
+log/detail/product_detail_scraper.log
+log/detail/product_detail_error.jsonl
+log/detail/debug_empty_detail_*.html
 ```
 
 ---
@@ -193,10 +329,23 @@ Run:
 df_reviews = await run_reviews(REVIEW_PRODUCT_URLS)
 ```
 
-Output example:
+Final output:
 
 ```text
-collected_data/lazada_reviews_YYYYMMDD_HHMMSS.xlsx
+collected_data/lazada_review_YYYYMMDD_HHMMSS.xlsx
+```
+
+Temp checkpoint:
+
+```text
+collected_data/temp/temp_lazada_reviews.csv
+```
+
+Log files:
+
+```text
+log/review/review_scraper.log
+log/review/review_error.jsonl
 ```
 
 ---
@@ -210,60 +359,97 @@ Edit keywords:
 
 ```python
 SEARCH_KEYWORDS = [
-    "sunscreen",
-    "lipstick",
+    "ครีมกันแดด",
+    "มาสก์หน้า",
+    "รองพื้น",
+    "อายไลเนอร์",
+    "บลัชออน",
+    "แป้งพัฟ",
+    "คลีนซิ่ง",
+    "คลีนเซอร์",
+    "eye shadow",
+    "toner pad"
 ]
 ```
 
-Run:
+Run normally:
 
 ```python
 df_search = await run_search_keyword(
     SEARCH_KEYWORDS,
-    max_pages=5,
     official_only=False
 )
 ```
 
-Output example:
+Run only a page range for error recovery:
+
+```python
+df_search = await run_search_keyword(
+    ["อายไลเนอร์"],
+    official_only=False,
+    start_page_by_keyword={"อายไลเนอร์": 59},
+    end_page_by_keyword={"อายไลเนอร์": 102}
+)
+```
+
+Final output:
 
 ```text
 collected_data/lazada_search_YYYYMMDD_HHMMSS.xlsx
 ```
 
----
-
-## 🗂️ Recommended Repository Structure
+Temp checkpoint:
 
 ```text
-lazada-scraper/
-│
-├── README.md
-├── .gitignore
-├── requirements.txt
-│
-├── lazada_scraper_playwright.ipynb
-│
-├── collected_data/          # ignored by git
-│   ├── lazada_products_YYYYMMDD_HHMMSS.xlsx
-│   ├── lazada_details_YYYYMMDD_HHMMSS.xlsx
-│   ├── lazada_reviews_YYYYMMDD_HHMMSS.xlsx
-│   ├── lazada_search_YYYYMMDD_HHMMSS.xlsx
-│
-└── my_session/              # ignored by git
-    └── browser session files
+collected_data/temp/temp_lazada_search.csv
+```
+
+Log files:
+
+```text
+log/search/search_keyword_scraper.log
+log/search/search_keyword_error.jsonl
 ```
 
 ---
 
-## 📁 Repository Files
+## 🔁 Resume and Checkpoint Behavior
 
-| Filename | Description |
-| :--- | :--- |
-| `README.md` | Project documentation |
-| `.gitignore` | Specifies files and folders excluded from GitHub |
-| `requirements.txt` | Python package dependencies |
-| `lazada_scraper_playwright.ipynb` | Main Jupyter Notebook for Lazada scraping workflows |
+Version 2 uses CSV temp checkpoint files.
+
+If `RESUME_FROM_BACKUP = True`, the scraper will load existing temp files and skip duplicated rows using dedupe keys.
+
+| Workflow | Temp File | Resume Logic |
+| :--- | :--- | :--- |
+| Product by Shop | `temp_lazada_products.csv` | Skip duplicated `product_id + sku_id + product_url` |
+| Product Detail | `temp_lazada_details.csv` | Skip duplicated `product_id + product_url` |
+| Review | `temp_lazada_reviews.csv` | Skip duplicated `product_id + user_name + review_date_raw + comment_text` |
+| Search Keyword | `temp_lazada_search.csv` | Skip duplicated `search_keyword + product_id + sku_id + product_url` |
+
+---
+
+## 🧾 Logging System
+
+Version 2 separates logs by workflow.
+
+| Workflow | General Log | Error Log |
+| :--- | :--- | :--- |
+| Product by Shop | `log/product/product_scraper.log` | `log/product/product_error.jsonl` |
+| Product Detail | `log/detail/product_detail_scraper.log` | `log/detail/product_detail_error.jsonl` |
+| Review | `log/review/review_scraper.log` | `log/review/review_error.jsonl` |
+| Search Keyword | `log/search/search_keyword_scraper.log` | `log/search/search_keyword_error.jsonl` |
+
+### Example `.log` Record
+
+```text
+2026-05-04 13:18:12 | INFO | search_keyword | Search keyword checkpoint saved | {"keyword": "ครีมกันแดด", "page_no": 5, "start_page": 1, "end_page": 5, "collected_rows": 200}
+```
+
+### Example `.jsonl` Error Record
+
+```json
+{"logged_at": "2026-05-04 13:20:00", "scraper_name": "search_keyword", "level": "ERROR", "message": "Page check timeout", "keyword": "อายไลเนอร์", "page_no": 59}
+```
 
 ---
 
@@ -271,9 +457,9 @@ lazada-scraper/
 
 | Output File | Description |
 | :--- | :--- |
-| `lazada_products_*.xlsx` | Product listings scraped from Lazada shop pages |
-| `lazada_details_*.xlsx` | Product detail data scraped from product pages |
-| `lazada_reviews_*.xlsx` | Customer reviews scraped from Lazada review API |
+| `lazada_product_*.xlsx` | Product listings scraped from Lazada shop pages |
+| `lazada_detail_*.xlsx` | Product detail data scraped from product pages |
+| `lazada_review_*.xlsx` | Customer reviews scraped from Lazada review API |
 | `lazada_search_*.xlsx` | Product listings scraped from Lazada search keywords |
 
 ---
@@ -281,8 +467,6 @@ lazada-scraper/
 # 📊 Data Dictionary
 
 ## 1. Product by Shop Data
-
-This file contains product listing data scraped from Lazada shop pages.
 
 | Column Name | Description |
 | :--- | :--- |
@@ -293,9 +477,9 @@ This file contains product listing data scraped from Lazada shop pages.
 | `categories` | Product category IDs from Lazada |
 | `shop_name` | Shop name |
 | `seller_id` | Seller ID |
-| `shop_key` | Shop key used in Lazada URL |
+| `shop_key` | Shop key extracted from Lazada shop URL |
 | `location` | Product shipping location |
-| `discount_price` | Current selling price after discount |
+| `current_price` | Current selling price |
 | `original_price` | Original price before discount |
 | `sold_count` | Parsed number of sold items |
 | `sold_count_raw` | Original sold count text from Lazada |
@@ -312,8 +496,6 @@ This file contains product listing data scraped from Lazada shop pages.
 
 ## 2. Product Detail Data
 
-This file contains detailed information scraped from product detail pages.
-
 | Column Name | Description |
 | :--- | :--- |
 | `product_id` | Lazada product ID |
@@ -324,23 +506,22 @@ This file contains detailed information scraped from product detail pages.
 | `all_specs` | Raw product specification information in JSON format |
 | `description` | Product description text |
 | `description_images` | Product description image URLs in JSON format |
+| `source_platform` | Source platform, usually `Lazada` |
 | `collected_at` | Timestamp of data collection |
 
 ---
 
 ## 3. Review Data
 
-This file contains customer reviews scraped from Lazada product review API.
-
 | Column Name | Description |
 | :--- | :--- |
-| `shop_id` | Shop ID |
+| `shop_id` | Lazada seller/shop ID |
 | `product_id` | Lazada product ID |
 | `shop_name` | Shop name |
 | `product_name` | Product name |
-| `user_name` | Reviewer's username |
-| `rating_score` | Rating given by the customer |
-| `review_time_raw` | Original review date text from Lazada |
+| `user_name` | Reviewer username |
+| `rating_score` | Rating given by customer |
+| `review_date_raw` | Original review date text from Lazada |
 | `review_date` | Converted review date in `YYYY-MM-DD` format |
 | `product_option` | Product variation purchased by customer |
 | `comment_text` | Customer review text |
@@ -352,16 +533,13 @@ This file contains customer reviews scraped from Lazada product review API.
 
 ## 4. Search Keyword Data
 
-This file contains product listing data scraped from Lazada search results.
-
 | Column Name | Description |
 | :--- | :--- |
 | `product_id` | Lazada product ID |
 | `sku_id` | SKU ID |
-| `search_keyword` | Search keyword used |
 | `product_name` | Product name |
 | `brand_name` | Brand name |
-| `discount_price` | Current selling price after discount |
+| `discount_price` | Current selling price from search results |
 | `original_price` | Original price before discount |
 | `sold_count` | Parsed number of sold items |
 | `sold_count_raw` | Original sold count text from Lazada |
@@ -374,6 +552,7 @@ This file contains product listing data scraped from Lazada search results.
 | `is_sponsored` | Whether product is sponsored |
 | `product_url` | Product URL |
 | `image_url` | Product image URL |
+| `search_keyword` | Search keyword used |
 | `source_platform` | Source platform, usually `Lazada` |
 | `collected_at` | Timestamp of data collection |
 
@@ -381,7 +560,7 @@ This file contains product listing data scraped from Lazada search results.
 
 ## 🧩 Notes on JSON Columns
 
-Some columns are stored as JSON strings to preserve the original structure from Lazada.
+Some columns are stored as JSON strings to preserve the original Lazada structure.
 
 | Column | Description |
 | :--- | :--- |
@@ -404,12 +583,43 @@ These raw JSON columns are useful for later reprocessing if additional fields ar
 
 ## ⚠️ Important Notes
 
-- The scraper uses Playwright persistent browser context to keep login sessions.
+- The scraper uses Playwright Persistent Browser Context to keep browser sessions.
 - The scraper does not bypass CAPTCHA, verification, login, or security checks.
 - If Lazada shows a verification page, the user must complete it manually in the browser.
-- Some fields may be empty depending on Lazada API response.
-- Product detail data may require scrolling before content is loaded.
+- `shop_key` is available only in Product by Shop output because it is extracted from shop URLs.
+- Product Detail, Review, and Search Keyword URLs normally do not contain `shop_key`.
+- Temp checkpoint files are saved as CSV to reduce freezing issues from large Excel files.
+- Final output files are saved as Excel for easier analysis.
 - Review date conversion is approximate for relative dates such as `1 เดือนที่แล้ว` or `2 ปีที่แล้ว`.
-- The structure of Lazada pages and APIs may change over time.
+- Lazada page structure and API responses may change over time.
+
+---
+
+## 🧹 Recommended `.gitignore`
+
+```gitignore
+# Browser session / cookies
+my_session/
+
+# Scraped data outputs
+collected_data/
+log/
+
+# Python cache
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Environment files
+.env
+.venv/
+venv/
+
+# OS files
+.DS_Store
+Thumbs.db
+```
+
+Do not upload `my_session/`, `collected_data/`, or `log/` to GitHub.
 
 ---
