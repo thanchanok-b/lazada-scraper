@@ -31,22 +31,6 @@ This project includes four scraping workflows:
 
 ---
 
-## 🆕 What’s New in Version 2
-
-Version 2 includes the following improvements:
-
-| Area | Version 2 Improvement |
-| :--- | :--- |
-| Checkpoint files | Temp checkpoint files are saved as `.csv` instead of `.xlsx` to reduce freezing |
-| Logging | Logs are saved as `.log` and error records are saved as `.jsonl` |
-| Folder structure | Output, temp, log, and session folders are separated clearly |
-| Resume workflow | Existing temp files can be loaded to continue scraping |
-| Search Keyword | Supports page-range resume using `start_page_by_keyword` and `end_page_by_keyword` |
-| Row format | Product, detail, review, and search outputs use separate row builders |
-| `shop_key` logic | `shop_key` is used only for Product by Shop because it comes from shop URLs |
-
----
-
 ## ⚙️ Setup and Installation
 
 ### 1. Prerequisites
